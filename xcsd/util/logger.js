@@ -1,5 +1,6 @@
 'use strict';
 
+const formats = require('dd-trace/ext/formats');
 var cluster = require('cluster');
 var util = require('util');
 
@@ -20,6 +21,33 @@ function logify(input) {
     return input;
 }
 
+function formatMessage(level, message) {
+
+    switch (level) {
+        case 2:
+            level = 'CRITICAL';
+            break;
+        case 3:
+            level = 'ERROR';
+            break;
+        case 4:
+            level = 'WARNING';
+            break;
+        case 6:
+            level = 'INFO';
+            break;
+        case 7:
+            level = 'DEBUG';
+            break;
+        default:
+            level = 'UNKNOWN';
+            break;
+    }
+    const time = new Date().toISOString();
+    const record = { time, level, message };
+    return JSON.stringify(record);
+}
+
 function Logger(request) {
     this.request = request;
 }
@@ -38,12 +66,25 @@ Logger.prototype.logMessage = function (level) {
     
     // evaughan TODO: Only log warnings, errors, and critical messages (i.e. skip debug and info messages)
     if (level <= 7) {
-        console.log('%s', message);
+
+        const jsonMessage = formatMessage(level, message);
+
+        const tracer = global.tracer;
+        const span = tracer.scope().active();
+        if (span) {
+            tracer.inject(span.context(), formats.LOG, jsonMessage);
+        }
+
+        console.log('%s', jsonMessage);
         
         // Log stack traces for any errors in the arguments
         messageArgs.forEach(arg => {
             if (arg && arg.stack) {
-                console.log('%s', arg.stack);
+                const jsonStack = formatMessage(level, arg.stack);
+                if (span) {
+                    tracer.inject(span.context(), formats.LOG, jsonStack);
+                }
+                console.log('%s', jsonStack);
             }
         });
     }

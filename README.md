@@ -23,15 +23,62 @@ Environments:
 7. `npm update`, if you fail, check your node version and python version.
 8. `npm list` try again, and fix it. Still you will see the log is clean.
 
-## Nodejs with data dog
+### Node.js Log Collection with Datadog
+
+Your have two ways to collect the nodejs log.
+
+#### Use winston with xcs
+
+[Flow-up this guide](https://docs.datadoghq.com/logs/log_collection/nodejs/?tab=winston30)
+
+`npm install winston@2` in xcs/xcsd/ path.
+
+#### Use default log with xcs
+
+Have some information by custom log format with datadog.
+
+* [Send your logs in JSON](https://us5.datadoghq.com/logs/onboarding/server)
+* [Format like winston log](https://docs.datadoghq.com/logs/log_collection/nodejs/?tab=winston20)
+* [Connecting Node.js Logs and Traces](https://docs.datadoghq.com/tracing/other_telemetry/connect_logs_and_traces/nodejs/)
+
+```log
+{"level":"info","message":"Hello simple log!","timestamp":"2015-04-23T16:52:05.337Z"}
+{"color":"blue","level":"info","message":"Hello log with metas","timestamp":"2015-04-23T16:52:05.339Z"}
+```
+
+### Node.js APM with Datadog
 
 when you install Datadog integration with nodejs by Datadog guidelines will fail.
 The reason is dd-trace need bind with xcs environment, and more nodejs run detail check the file(com.apple.xcsd.plist).
 
-### How to install dd-trace with nodejs
+#### How to install dd-trace with nodejs
 
 1. Install dd-trace version, you need check the xcode server nodejs version, and install the same version of dd-trace.  
     * How to use the same version of dd-trace? [dd-trace Version Release Lines and Maintenance](https://github.com/DataDog/dd-trace-js#version-release-lines-and-maintenance)
 2. Install dd-trace of Node.js `npm install dd-trace@2`
 3. `npm list`, will sell the issues by ws & Node.js module, and remove it.
-5. Flow the [Datadog Node.js Tracer](https://docs.datadoghq.com/tracing/setup/nodejs/) to install the dd-trace
+4. Flow the [Datadog Node.js Tracer](https://docs.datadoghq.com/tracing/setup/nodejs/) to install the dd-trace
+
+#### How to use dd-trace with xcs
+
+Insert the code in the first line of your app.js
+
+```JavaScript
+// This line must come before importing any instrumented module.
+const tracer = require('dd-trace').init({
+    env: 'xcs-node-app-env',
+    service: 'xcs-node-app-ser',
+    logInjection: true
+});
+```
+
+Insert the code in the last line of your worker.js
+
+```JavaScript
+// This line must come after importing any instrumented module.
+const tracer = require('dd-trace').init({
+    env: 'xcs-node-worker-env',
+    service: 'xcs-node-worker-ser',
+    logInjection: true
+});
+```

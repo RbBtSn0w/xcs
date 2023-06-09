@@ -1,5 +1,13 @@
 'use strict';
 
+// This line must come after importing any instrumented module.
+global.tracer = require('dd-trace').init({
+    env: 'xcs-node-worker-env',
+    service: 'xcs-node-worker',
+    logInjection: true
+});
+
+
 var NR = require('node-resque');
 
 var jobs = require('./worker/jobs.js'),
