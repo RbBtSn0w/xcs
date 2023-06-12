@@ -66,8 +66,8 @@ Insert the code in the first line of your app.js
 ```JavaScript
 // This line must come before importing any instrumented module.
 const tracer = require('dd-trace').init({
-    env: 'xcs-node-app-env',
-    service: 'xcs-node-app-ser',
+    env: 'xcs-node',
+    service: 'xcs-app',
     logInjection: true
 });
 ```
@@ -77,8 +77,8 @@ Insert the code in the last line of your worker.js
 ```JavaScript
 // This line must come after importing any instrumented module.
 const tracer = require('dd-trace').init({
-    env: 'xcs-node-worker-env',
-    service: 'xcs-node-worker-ser',
+    env: 'xcs-node',
+    service: 'xcs-worker',
     logInjection: true
 });
 ```

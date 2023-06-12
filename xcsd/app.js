@@ -1,8 +1,8 @@
 'use strict';
 
 global.tracer = require('dd-trace').init({
-    env: 'xcs-node-app-env',
-    service: 'xcs-node-app',
+    env: 'xcs-node',
+    service: 'xcs-app',
     logInjection: true
 });
 

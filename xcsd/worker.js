@@ -2,8 +2,8 @@
 
 // This line must come after importing any instrumented module.
 global.tracer = require('dd-trace').init({
-    env: 'xcs-node-worker-env',
-    service: 'xcs-node-worker',
+    env: 'xcs-node',
+    service: 'xcs-worker',
     logInjection: true
 });
 
