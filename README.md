@@ -82,3 +82,79 @@ const tracer = require('dd-trace').init({
     logInjection: true
 });
 ```
+
+Upgrade logger with DataDog requirement.
+
+Insert formatMessage function of logger.js
+
+```JavaScript
+```JavaScript
+function formatMessage(level, message) {
+
+    switch (level) {
+        case 2:
+            level = 'CRITICAL';
+            break;
+        case 3:
+            level = 'ERROR';
+            break;
+        case 4:
+            level = 'WARNING';
+            break;
+        case 6:
+            level = 'INFO';
+            break;
+        case 7:
+            level = 'DEBUG';
+            break;
+        default:
+            level = 'UNKNOWN';
+            break;
+    }
+    const time = new Date().toISOString();
+    const record = { time, level, message };
+    return JSON.stringify(record);
+}
+```
+
+Upgrade and inset trace segment of logger.js
+
+```JavaScript
+Logger.prototype.logMessage = function (level) {
+    var messageArgs = Array.prototype.slice.call(arguments, 1),
+        message = messageArgs.map(logify).join(' ');
+    
+    // evaughan TODO: Only log warnings, errors, and critical messages (i.e. skip debug and info messages)
+    if (level <= 7) {
+
+        const jsonMessage = formatMessage(level, message);
+
+        const tracer = global.tracer;
+        const span = tracer.scope().active();
+        if (span) {
+            tracer.inject(span.context(), formats.LOG, jsonMessage);
+        }
+
+        console.log('%s', jsonMessage);
+        
+        // Log stack traces for any errors in the arguments
+        messageArgs.forEach(arg => {
+            if (arg && arg.stack) {
+                const jsonStack = formatMessage(level, arg.stack);
+                if (span) {
+                    tracer.inject(span.context(), formats.LOG, jsonStack);
+                }
+                console.log('%s', jsonStack);
+            }
+        });
+    }
+};
+```
+
+### Upgrade Node.js version to v16
+
+1. `nvm install 16`
+2. `which node` and copy the target to `/Node/bin/node`. eg: `cp "$(which node)" "${PWD}/../Node/bin/"`.
+3. remove all devDependencies in package.json, Cuz some dev module will fail to install.
+4. `npm install dd-trace@4`, The last version of dd-trace is 4 is support this nodejs version.
+5. `npm list` check the issues and fix it.
