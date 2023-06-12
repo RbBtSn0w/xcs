@@ -48,7 +48,7 @@ function levelToEventName(level) {
 function formatMessage(level, message) {
     const time = new Date().toISOString();
     const record = { time, "level":levelToEventName(level), message };
-    return JSON.stringify(record);
+    return record;
 }
 
 function Logger(request) {
@@ -70,24 +70,27 @@ Logger.prototype.logMessage = function (level) {
     // evaughan TODO: Only log warnings, errors, and critical messages (i.e. skip debug and info messages)
     if (level <= 7) {
 
-        const jsonMessage = formatMessage(level, message);
+        const record = formatMessage(level, message);
 
         const tracer = global.tracer;
+        //https://docs.datadoghq.com/tracing/other_telemetry/connect_logs_and_traces/nodejs/
         const span = tracer.scope().active();
-        if (span && level <= 4) {
-            span.log({ event: "error", message: message });
+        if (span) {
+            // Add the span context to the log record
+            tracer.inject(span.context(), formats.LOG, record);
         }
 
-        console.log('%s', jsonMessage);
+        console.log(JSON.stringify(record));
         
         // Log stack traces for any errors in the arguments
         messageArgs.forEach(arg => {
             if (arg && arg.stack) {
-                const jsonStack = formatMessage(level, arg.stack);
-                if (span && level <= 4) {
-                    span.log({ event: "error", message: arg.stack });
+                const recordStack = formatMessage(level, arg.stack);
+                if (span) {
+                    // Add the span context to the log record
+                    tracer.inject(span.context(), formats.LOG, recordStack);
                 }
-                console.log('%s', jsonStack);
+                console.log(JSON.stringify(recordStack));
             }
         });
     }
