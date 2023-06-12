@@ -4,7 +4,9 @@
 global.tracer = require('dd-trace').init({
     env: 'xcs-node',
     service: 'xcs-worker',
-    logInjection: true
+    logInjection: true,
+    profiling: true,
+    runtimeMetrics: true
 });
 
 

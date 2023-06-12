@@ -3,7 +3,9 @@
 global.tracer = require('dd-trace').init({
     env: 'xcs-node',
     service: 'xcs-app',
-    logInjection: true
+    logInjection: true,
+    profiling: true,
+    runtimeMetrics: true
 });
 
 var express = require('express'),
