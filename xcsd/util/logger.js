@@ -21,8 +21,7 @@ function logify(input) {
     return input;
 }
 
-function formatMessage(level, message) {
-
+function levelToEventName(level) {
     switch (level) {
         case 2:
             level = 'CRITICAL';
@@ -43,8 +42,12 @@ function formatMessage(level, message) {
             level = 'UNKNOWN';
             break;
     }
+    return level;
+}
+
+function formatMessage(level, message) {
     const time = new Date().toISOString();
-    const record = { time, level, message };
+    const record = { time, "level":levelToEventName(level), message };
     return JSON.stringify(record);
 }
 
@@ -71,8 +74,8 @@ Logger.prototype.logMessage = function (level) {
 
         const tracer = global.tracer;
         const span = tracer.scope().active();
-        if (span) {
-            tracer.inject(span.context(), formats.LOG, jsonMessage);
+        if (span && level <= 4) {
+            span.log({ event: "error", message: message });
         }
 
         console.log('%s', jsonMessage);
@@ -81,8 +84,8 @@ Logger.prototype.logMessage = function (level) {
         messageArgs.forEach(arg => {
             if (arg && arg.stack) {
                 const jsonStack = formatMessage(level, arg.stack);
-                if (span) {
-                    tracer.inject(span.context(), formats.LOG, jsonStack);
+                if (span && level <= 4) {
+                    span.log({ event: "error", message: arg.stack });
                 }
                 console.log('%s', jsonStack);
             }
